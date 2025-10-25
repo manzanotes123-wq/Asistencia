@@ -7,6 +7,44 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    /* Modal QR emergente */
+    #qrModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    #qrModal.active { display: flex; }
+    .qr-modal-content {
+      background: var(--card, #111827);
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      text-align: center;
+      position: relative;
+    }
+    .qr-modal-content h3 {
+      margin-bottom: 12px;
+      color: var(--text, #e5e7eb);
+    }
+    .qr-large { width: 300px; height: 300px; margin: auto; }
+    .close-modal {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: transparent;
+      border: none;
+      color: var(--text, #e5e7eb);
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .close-modal:hover { color: #22d3ee; }
+  </style>
 </head>
 <body>
   <header class="topbar glass">
@@ -26,22 +64,18 @@
   </header>
 
   <main class="container">
-    <!-- PRIMERA VENTANA: REGISTRO -->
+    <!-- PRIMERA VENTANA -->
     <section id="tab-registro" class="tab-panel active">
       <div class="card grid-2">
         <div>
           <h3 class="card-title">Nuevo / Editar estudiante</h3>
           <label>Nombre</label>
           <input id="nombre" type="text" placeholder="Ej. Ana López" />
-          <div class="inline">
-            <button id="btnRellenarNombre" class="muted">Rellenar con Datos</button>
-          </div>
+          <div class="inline"><button id="btnRellenarNombre" class="muted">Rellenar con Datos</button></div>
 
           <label>Carnet</label>
           <input id="carnet" type="text" placeholder="Ej. 20241234" />
-          <div class="inline">
-            <button id="btnRellenarCarnet" class="muted">Rellenar con Datos</button>
-          </div>
+          <div class="inline"><button id="btnRellenarCarnet" class="muted">Rellenar con Datos</button></div>
 
           <div class="actions">
             <button id="btnGuardar" class="primary">Guardar</button>
@@ -50,12 +84,15 @@
           </div>
 
           <!-- Bloque QR -->
-          <div id="qrPanel" class="card subtle" style="margin-top:16px">
+          <div id="qrPanel" class="card subtle" style="margin-top:16px;text-align:center">
             <h4 class="card-title">QR a la Segunda Ventana</h4>
-            <div id="qrcode" style="width:160px;height:160px"></div>
-            <small class="muted">Escanéalo para abrir la pestaña de asistencia.</small>
-            <div style="margin-top:8px;text-align:center">
+            <div id="qrcode" style="width:180px;height:180px;margin:auto;"></div>
+            <small class="muted">📱 Escanéalo con tu teléfono para abrir la asistencia.</small>
+            <div style="margin-top:8px;">
               <a href="https://asistencia-rho.vercel.app/?go=asistencia" target="_blank" class="primary" style="text-decoration:none;color:#22d3ee;font-weight:bold">🔗 Abrir Asistencia</a>
+            </div>
+            <div style="margin-top:10px;">
+              <button id="btnQrGrande" class="secondary">🔍 Ver QR en grande</button>
             </div>
           </div>
         </div>
@@ -65,9 +102,7 @@
           <input id="buscar" class="search" placeholder="Buscar por nombre o carnet..." />
           <div class="table-wrap">
             <table id="tablaEstudiantes" class="table">
-              <thead>
-                <tr><th>Nombre</th><th>Carnet</th></tr>
-              </thead>
+              <thead><tr><th>Nombre</th><th>Carnet</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -76,26 +111,20 @@
       </div>
     </section>
 
-    <!-- SEGUNDA VENTANA: ASISTENCIA -->
+    <!-- SEGUNDA VENTANA -->
     <section id="tab-asistencia" class="tab-panel">
       <div class="card">
         <div class="row">
-          <div>
-            <h3 class="card-title">Asistencia del día</h3>
-            <input id="fechaAsistencia" type="date" />
-          </div>
+          <div><h3 class="card-title">Asistencia del día</h3><input id="fechaAsistencia" type="date" /></div>
           <div class="right">
             <button id="btnGuardarAsistencia" class="primary">Guardar Asistencia</button>
             <button id="btnMarcarTodos" class="secondary">Marcar todos</button>
             <button id="btnDesmarcarTodos" class="muted">Desmarcar</button>
           </div>
         </div>
-
         <div class="table-wrap">
           <table id="tablaAsistencia" class="table">
-            <thead>
-              <tr><th style="width:110px">Presente</th><th>Nombre</th><th>Carnet</th><th>Asistencia</th></tr>
-            </thead>
+            <thead><tr><th style="width:110px">Presente</th><th>Nombre</th><th>Carnet</th><th>Asistencia</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -103,37 +132,26 @@
       </div>
     </section>
 
-    <!-- TERCERA VENTANA: REPORTES -->
+    <!-- TERCERA VENTANA -->
     <section id="tab-reportes" class="tab-panel">
       <div class="card">
         <h3 class="card-title">Reportes & Penalizaciones</h3>
         <div class="grid-3">
-          <div>
-            <label>Alumno</label>
-            <select id="selectAlumno"></select>
-          </div>
-          <div>
-            <label>Desde</label>
-            <input id="desde" type="date" />
-          </div>
-          <div>
-            <label>Hasta</label>
-            <input id="hasta" type="date" />
-          </div>
+          <div><label>Alumno</label><select id="selectAlumno"></select></div>
+          <div><label>Desde</label><input id="desde" type="date" /></div>
+          <div><label>Hasta</label><input id="hasta" type="date" /></div>
         </div>
         <div class="actions">
           <button id="btnCalcular" class="primary">Calcular</button>
           <button id="btnCSV" class="secondary">Descargar CSV</button>
           <button id="btnPDF" class="secondary">Descargar PDF</button>
         </div>
-
         <div class="stats">
           <div class="stat"><span id="statPresentes">0</span><label>Presentes</label></div>
           <div class="stat danger"><span id="statFaltas">0</span><label>Faltas</label></div>
           <div class="stat"><span id="statTotal">0</span><label>Total sesiones</label></div>
-          <div class="stat badge"><span id="statPenaliza">No</span><label>Penalización (&gt; 2 faltas)</label></div>
+          <div class="stat badge"><span id="statPenaliza">No</span><label>Penalización (&gt;2 faltas)</label></div>
         </div>
-
         <div class="table-wrap">
           <table id="tablaReporte" class="table">
             <thead><tr><th>Fecha</th><th>Estado</th></tr></thead>
@@ -146,26 +164,31 @@
 
   <div id="toaster" aria-live="polite" aria-atomic="true"></div>
 
+  <!-- Modal QR -->
+  <div id="qrModal">
+    <div class="qr-modal-content">
+      <button class="close-modal" id="closeModal">✖</button>
+      <h3>QR de Asistencia</h3>
+      <div id="qrGrande" class="qr-large"></div>
+    </div>
+  </div>
+
   <script type="module" src="app.js"></script>
 
-  <!-- ✅ Tabs + Tema + Densidad + QR funcional -->
+  <!-- ✅ Lógica general + QR + Modal -->
   <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // --- Navegación entre pestañas ---
-    function activateTab(btn) {
-      document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      const target = btn.getAttribute("data-target");
-      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-      const panel = document.querySelector(target);
-      if (panel) panel.classList.add("active");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-    document.querySelectorAll(".tab").forEach(btn =>
-      btn.addEventListener("click", () => activateTab(btn))
-    );
+    // Tabs
+    document.querySelectorAll(".tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.querySelector(btn.getAttribute("data-target")).classList.add("active");
+      });
+    });
 
-    // --- Tema ---
+    // Tema
     const root = document.documentElement;
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) root.setAttribute("data-theme", savedTheme);
@@ -175,45 +198,48 @@
       localStorage.setItem("theme", next);
     });
 
-    // --- Densidad ---
+    // Densidad
     const savedDensity = localStorage.getItem("density");
     if (savedDensity === "compact") document.body.classList.add("compact");
     document.getElementById("btnDensity")?.addEventListener("click", () => {
       document.body.classList.toggle("compact");
-      localStorage.setItem(
-        "density",
-        document.body.classList.contains("compact") ? "compact" : "comfortable"
-      );
+      localStorage.setItem("density",
+        document.body.classList.contains("compact") ? "compact" : "comfortable");
     });
 
-    // --- QR fijo para Vercel ---
-    try {
-      const qrEl = document.getElementById("qrcode");
-      if (qrEl && window.QRCode) {
-        const qrUrl = "https://asistencia-rho.vercel.app/?go=asistencia";
-        console.log("Generando QR con:", qrUrl);
-        new QRCode(qrEl, { text: qrUrl, width: 160, height: 160 });
-      }
+    // QR principal y modal
+    const qrUrl = "https://asistencia-rho.vercel.app/?go=asistencia";
+    const qrEl = document.getElementById("qrcode");
+    const qrGrandeEl = document.getElementById("qrGrande");
+    if (window.QRCode && qrEl) {
+      setTimeout(() => {
+        qrEl.innerHTML = "";
+        new QRCode(qrEl, { text: qrUrl, width: 180, height: 180, correctLevel: QRCode.CorrectLevel.H });
+      }, 300);
+    }
 
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("go") === "asistencia") {
-        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-        document.getElementById("tab-asistencia")?.classList.add("active");
-        document.querySelectorAll(".tabs .tab").forEach(b => {
-          b.classList.remove("active");
-          b.setAttribute("aria-selected", "false");
-        });
-        const btn = document.querySelector('.tabs .tab[data-target="#tab-asistencia"]');
-        if (btn) {
-          btn.classList.add("active");
-          btn.setAttribute("aria-selected", "true");
-        }
-      }
-    } catch (e) {
-      console.warn("Error QR:", e);
+    // Modal QR
+    const modal = document.getElementById("qrModal");
+    document.getElementById("btnQrGrande").addEventListener("click", () => {
+      modal.classList.add("active");
+      qrGrandeEl.innerHTML = "";
+      new QRCode(qrGrandeEl, { text: qrUrl, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.H });
+    });
+    document.getElementById("closeModal").addEventListener("click", () => modal.classList.remove("active"));
+    modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("active"); });
+
+    // Activar ventana Asistencia si viene con ?go=asistencia
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("go") === "asistencia") {
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      document.getElementById("tab-asistencia").classList.add("active");
+      document.querySelectorAll(".tabs .tab").forEach(b => b.classList.remove("active"));
+      const btn = document.querySelector('.tabs .tab[data-target="#tab-asistencia"]');
+      if (btn) btn.classList.add("active");
     }
   });
   </script>
 </body>
 </html>
+
 
