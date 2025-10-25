@@ -173,8 +173,6 @@
     </div>
   </div>
 
-  <script type="module" src="app.js"></script>
-
   <!-- ✅ Lógica general + QR + Modal -->
   <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -239,7 +237,8 @@
     }
   });
   </script>
+
+  <!-- 🧩 Cargar app.js al final (para que la base de datos funcione) -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>
-
-
