@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Registro de Estudiantes · Asistencia</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <header class="topbar glass">
+    <div class="brand">
+      <div class="logo">🎓</div>
+      <h1>Registro de Estudiantes</h1>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Navegación">
+      <button class="tab active" role="tab" aria-selected="true" data-target="#tab-registro">Primera Ventana</button>
+      <button class="tab" role="tab" aria-selected="false" data-target="#tab-asistencia">Segunda Ventana</button>
+      <button class="tab" role="tab" aria-selected="false" data-target="#tab-reportes">Tercera Ventana</button>
+    </nav>
+    <div class="controls">
+      <button id="btnDensity" class="chip" title="Alternar densidad">Densidad</button>
+      <button id="btnTheme" class="chip" title="Cambiar tema">Tema</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- PRIMERA VENTANA: REGISTRO -->
+    <section id="tab-registro" class="tab-panel active">
+      <div class="card grid-2">
+        <div>
+          <h3 class="card-title">Nuevo / Editar estudiante</h3>
+          <label>Nombre</label>
+          <input id="nombre" type="text" placeholder="Ej. Ana López" />
+          <div class="inline">
+            <button id="btnRellenarNombre" class="muted">Rellenar con Datos</button>
+          </div>
+
+          <label>Carnet</label>
+          <input id="carnet" type="text" placeholder="Ej. 20241234" />
+          <div class="inline">
+            <button id="btnRellenarCarnet" class="muted">Rellenar con Datos</button>
+          </div>
+
+          <div class="actions">
+            <button id="btnGuardar" class="primary">Guardar</button>
+            <button id="btnActualizar" class="warning">Actualización de Datos</button>
+            <button id="btnLimpiar" class="muted">Limpiar</button>
+          </div>
+          <div id="qrPanel" class="card subtle" style="margin-top:16px">
+            <h4 class="card-title">QR a la Segunda Ventana</h4>
+            <div id="qrcode" style="width:160px;height:160px"></div>
+            <small class="muted">Escanéalo para abrir la pestaña de asistencia.</small>
+          </div>
+    
+        </div>
+
+        <div>
+          <h3 class="card-title">Estudiantes (clic para seleccionar)</h3>
+          <input id="buscar" class="search" placeholder="Buscar por nombre o carnet..." />
+          <div class="table-wrap">
+            <table id="tablaEstudiantes" class="table">
+              <thead>
+                <tr><th>Nombre</th><th>Carnet</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <small class="muted">Tip: Selecciona un registro para editarlo y luego usa “Actualización de Datos”.</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEGUNDA VENTANA: ASISTENCIA -->
+    <section id="tab-asistencia" class="tab-panel">
+      <div class="card">
+        <div class="row">
+          <div>
+            <h3 class="card-title">Asistencia del día</h3>
+            <input id="fechaAsistencia" type="date" />
+          </div>
+          <div class="right">
+            <button id="btnGuardarAsistencia" class="primary">Guardar Asistencia</button>
+            <button id="btnMarcarTodos" class="secondary">Marcar todos</button>
+            <button id="btnDesmarcarTodos" class="muted">Desmarcar</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="tablaAsistencia" class="table">
+            <thead>
+              <tr><th style="width:110px">Presente</th><th>Nombre</th><th>Carnet</th><th>Asistencia</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <small class="muted">Tabla con todos los alumnos para marcar asistencia por fecha.</small>
+      </div>
+    </section>
+
+    <!-- TERCERA VENTANA: REPORTES -->
+    <section id="tab-reportes" class="tab-panel">
+      <div class="card">
+        <h3 class="card-title">Reportes & Penalizaciones</h3>
+        <div class="grid-3">
+          <div>
+            <label>Alumno</label>
+            <select id="selectAlumno"></select>
+          </div>
+          <div>
+            <label>Desde</label>
+            <input id="desde" type="date" />
+          </div>
+          <div>
+            <label>Hasta</label>
+            <input id="hasta" type="date" />
+          </div>
+        </div>
+        <div class="actions">
+          <button id="btnCalcular" class="primary">Calcular</button>
+          <button id="btnCSV" class="secondary">Descargar CSV</button>
+          <button id="btnPDF" class="secondary">Descargar PDF</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><span id="statPresentes">0</span><label>Presentes</label></div>
+          <div class="stat danger"><span id="statFaltas">0</span><label>Faltas</label></div>
+          <div class="stat"><span id="statTotal">0</span><label>Total sesiones</label></div>
+          <div class="stat badge"><span id="statPenaliza">No</span><label>Penalización (&gt; 2 faltas)</label></div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="tablaReporte" class="table">
+            <thead><tr><th>Fecha</th><th>Estado</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toaster -->
+  <div id="toaster" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Tabs fallback + theme/density toggles -->
+  <script>
+    (function(){
+      function activateTab(btn){
+        document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.getAttribute('data-target');
+        document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+        const panel = document.querySelector(target);
+        if(panel) panel.classList.add('active');
+        // scroll top for mobile
+        window.scrollTo({top:0, behavior:'smooth'});
+      }
+      document.addEventListener('DOMContentLoaded', function(){
+        document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click', ()=>activateTab(btn)));
+        // Theme toggle
+        const root = document.documentElement;
+        const saved = localStorage.getItem('theme');
+        if(saved) root.setAttribute('data-theme', saved);
+        document.getElementById('btnTheme')?.addEventListener('click', ()=>{
+          const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+          root.setAttribute('data-theme', next);
+          localStorage.setItem('theme', next);
+        });
+        // Density toggle
+        const savedD = localStorage.getItem('density');
+        if(savedD==='compact') document.body.classList.add('compact');
+        document.getElementById('btnDensity')?.addEventListener('click', ()=>{
+          document.body.classList.toggle('compact');
+          localStorage.setItem('density', document.body.classList.contains('compact')?'compact':'comfortable');
+        });
+      });
+    })();
+  </script>
+
+  <script type="module" src="app.js"></script>
+
+<script>
+  (function(){
+    try {
+      // Generar el QR si existe el contenedor
+      var qrEl = document.getElementById('qrcode');
+      if (qrEl && window.QRCode) {
+        var url = location.origin + location.pathname + '?go=asistencia';
+        new QRCode(qrEl, { text: url, width: 160, height: 160 });
+      }
+      // Si viene el query ?go=asistencia, activar segunda ventana
+      var params = new URLSearchParams(location.search);
+      if (params.get('go') === 'asistencia') {
+        var panels = document.querySelectorAll('.tab-panel');
+        panels.forEach(function(p){ p.classList.remove('active'); });
+        var btns = document.querySelectorAll('.tabs .tab');
+        btns.forEach(function(b){ b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+        var target = document.getElementById('tab-asistencia');
+        if (target) target.classList.add('active');
+        var btn = document.querySelector('.tabs .tab[data-target="#tab-asistencia"]');
+        if (btn) { btn.classList.add('active'); btn.setAttribute('aria-selected', 'true'); }
+      }
+    } catch(e){ console.warn(e); }
+  })();
+</script>
+
+</body>
+</html>
