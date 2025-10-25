@@ -6,14 +6,15 @@
   <title>Registro de Estudiantes · Asistencia</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- QRCode JS (robusto) -->
+  <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
 
   <style>
     /* Modal QR emergente */
     #qrModal {
       display: none;
       position: fixed;
-      top: 0; left: 0;
+      inset: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.7);
       align-items: center;
@@ -29,19 +30,12 @@
       text-align: center;
       position: relative;
     }
-    .qr-modal-content h3 {
-      margin-bottom: 12px;
-      color: var(--text, #e5e7eb);
-    }
+    .qr-modal-content h3 { margin-bottom: 12px; color: var(--text, #e5e7eb); }
     .qr-large { width: 300px; height: 300px; margin: auto; }
     .close-modal {
-      position: absolute;
-      top: 10px; right: 10px;
-      background: transparent;
-      border: none;
-      color: var(--text, #e5e7eb);
-      font-size: 22px;
-      cursor: pointer;
+      position: absolute; top: 10px; right: 10px;
+      background: transparent; border: none; color: var(--text, #e5e7eb);
+      font-size: 22px; cursor: pointer;
     }
     .close-modal:hover { color: #22d3ee; }
   </style>
@@ -89,10 +83,12 @@
             <div id="qrcode" style="width:180px;height:180px;margin:auto;"></div>
             <small class="muted">📱 Escanéalo con tu teléfono para abrir la asistencia.</small>
             <div style="margin-top:8px;">
-              <a href="https://asistencia-rho.vercel.app/?go=asistencia" target="_blank" class="primary" style="text-decoration:none;color:#22d3ee;font-weight:bold">🔗 Abrir Asistencia</a>
+              <!-- Enlace con HASH para máxima compatibilidad -->
+              <a href="https://asistencia-rho.vercel.app/#asistencia" target="_blank" class="primary" style="text-decoration:none;color:#22d3ee;font-weight:bold">🔗 Abrir Asistencia</a>
             </div>
-            <div style="margin-top:10px;">
+            <div style="margin-top:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
               <button id="btnQrGrande" class="secondary">🔍 Ver QR en grande</button>
+              <button id="btnCopiarQR" class="muted">📋 Copiar enlace del QR</button>
             </div>
           </div>
         </div>
@@ -173,7 +169,7 @@
     </div>
   </div>
 
-  <!-- ✅ Lógica general + QR + Modal -->
+  <!-- Lógica general + QR + Modal -->
   <script>
   document.addEventListener("DOMContentLoaded", () => {
     // Tabs
@@ -183,6 +179,7 @@
         document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
         btn.classList.add("active");
         document.querySelector(btn.getAttribute("data-target")).classList.add("active");
+        window.scrollTo({top:0, behavior:'smooth'});
       });
     });
 
@@ -205,40 +202,74 @@
         document.body.classList.contains("compact") ? "compact" : "comfortable");
     });
 
-    // QR principal y modal
-    const qrUrl = "https://asistencia-rho.vercel.app/?go=asistencia";
+    // ====== QR ======
+    const qrUrl = "https://asistencia-rho.vercel.app/#asistencia";
     const qrEl = document.getElementById("qrcode");
     const qrGrandeEl = document.getElementById("qrGrande");
-    if (window.QRCode && qrEl) {
-      setTimeout(() => {
-        qrEl.innerHTML = "";
-        new QRCode(qrEl, { text: qrUrl, width: 180, height: 180, correctLevel: QRCode.CorrectLevel.H });
-      }, 300);
-    }
 
-    // Modal QR
+    // Generar QR pequeño (con delay para asegurar DOM listo)
+    setTimeout(() => {
+      if (typeof QRCode !== "undefined" && qrEl) {
+        qrEl.innerHTML = "";
+        new QRCode(qrEl, {
+          text: qrUrl,
+          width: 180,
+          height: 180,
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      } else {
+        console.warn("⚠️ QRCode.js no cargó correctamente");
+      }
+    }, 500);
+
+    // Botón Ver QR en grande (modal)
     const modal = document.getElementById("qrModal");
-    document.getElementById("btnQrGrande").addEventListener("click", () => {
+    document.getElementById("btnQrGrande")?.addEventListener("click", () => {
       modal.classList.add("active");
       qrGrandeEl.innerHTML = "";
-      new QRCode(qrGrandeEl, { text: qrUrl, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.H });
+      new QRCode(qrGrandeEl, {
+        text: qrUrl,
+        width: 300,
+        height: 300,
+        correctLevel: QRCode.CorrectLevel.H
+      });
     });
-    document.getElementById("closeModal").addEventListener("click", () => modal.classList.remove("active"));
+    document.getElementById("closeModal")?.addEventListener("click", () => modal.classList.remove("active"));
     modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("active"); });
 
-    // Activar ventana Asistencia si viene con ?go=asistencia
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("go") === "asistencia") {
+    // Botón Copiar enlace del QR
+    document.getElementById("btnCopiarQR")?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(qrUrl);
+        alert("Enlace copiado:\n" + qrUrl);
+      } catch {
+        alert("No se pudo copiar. Copia manual:\n" + qrUrl);
+      }
+    });
+
+    // ====== Activar asistencia con query o hash ======
+    function activarAsistencia() {
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-      document.getElementById("tab-asistencia").classList.add("active");
-      document.querySelectorAll(".tabs .tab").forEach(b => b.classList.remove("active"));
+      document.getElementById("tab-asistencia")?.classList.add("active");
+      document.querySelectorAll(".tabs .tab").forEach(b => {
+        b.classList.remove("active");
+        b.setAttribute("aria-selected", "false");
+      });
       const btn = document.querySelector('.tabs .tab[data-target="#tab-asistencia"]');
-      if (btn) btn.classList.add("active");
+      if (btn) {
+        btn.classList.add("active");
+        btn.setAttribute("aria-selected", "true");
+      }
+    }
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("go") === "asistencia" || window.location.hash === "#asistencia") {
+      activarAsistencia();
     }
   });
   </script>
 
-  <!-- 🧩 Cargar app.js al final (para que la base de datos funcione) -->
+  <!-- app.js al final: base de datos/tablas -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
+
