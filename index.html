@@ -54,6 +54,9 @@
             <h4 class="card-title">QR a la Segunda Ventana</h4>
             <div id="qrcode" style="width:160px;height:160px"></div>
             <small class="muted">Escanéalo para abrir la pestaña de asistencia.</small>
+            <div style="margin-top:8px;text-align:center">
+              <a href="https://asistencia14.vercel.app/?go=asistencia" target="_blank" class="primary" style="text-decoration:none;color:#22d3ee;font-weight:bold">🔗 Abrir Asistencia</a>
+            </div>
           </div>
         </div>
 
@@ -145,31 +148,65 @@
 
   <script type="module" src="app.js"></script>
 
-  <!-- ✅ QR fijo para dominio Vercel -->
+  <!-- ✅ Tabs + Tema + Densidad + QR funcional -->
   <script>
   document.addEventListener("DOMContentLoaded", () => {
+    // --- Navegación entre pestañas ---
+    function activateTab(btn) {
+      document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const target = btn.getAttribute("data-target");
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      const panel = document.querySelector(target);
+      if (panel) panel.classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    document.querySelectorAll(".tab").forEach(btn =>
+      btn.addEventListener("click", () => activateTab(btn))
+    );
+
+    // --- Tema ---
+    const root = document.documentElement;
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) root.setAttribute("data-theme", savedTheme);
+    document.getElementById("btnTheme")?.addEventListener("click", () => {
+      const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      localStorage.setItem("theme", next);
+    });
+
+    // --- Densidad ---
+    const savedDensity = localStorage.getItem("density");
+    if (savedDensity === "compact") document.body.classList.add("compact");
+    document.getElementById("btnDensity")?.addEventListener("click", () => {
+      document.body.classList.toggle("compact");
+      localStorage.setItem(
+        "density",
+        document.body.classList.contains("compact") ? "compact" : "comfortable"
+      );
+    });
+
+    // --- QR fijo para Vercel ---
     try {
       const qrEl = document.getElementById("qrcode");
       if (qrEl && window.QRCode) {
-        // 🔗 URL fija (dominio Vercel)
         const qrUrl = "https://asistencia14.vercel.app/?go=asistencia";
         console.log("Generando QR con:", qrUrl);
         new QRCode(qrEl, { text: qrUrl, width: 160, height: 160 });
       }
 
-      // Si se abre con ?go=asistencia → activar Segunda Ventana
       const params = new URLSearchParams(window.location.search);
       if (params.get("go") === "asistencia") {
-        document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
         document.getElementById("tab-asistencia")?.classList.add("active");
-        document.querySelectorAll(".tabs .tab").forEach(b=>{
+        document.querySelectorAll(".tabs .tab").forEach(b => {
           b.classList.remove("active");
-          b.setAttribute("aria-selected","false");
+          b.setAttribute("aria-selected", "false");
         });
         const btn = document.querySelector('.tabs .tab[data-target="#tab-asistencia"]');
         if (btn) {
           btn.classList.add("active");
-          btn.setAttribute("aria-selected","true");
+          btn.setAttribute("aria-selected", "true");
         }
       }
     } catch (e) {
@@ -179,3 +216,4 @@
   </script>
 </body>
 </html>
+
