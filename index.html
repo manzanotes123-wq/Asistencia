@@ -55,7 +55,7 @@
             <div id="qrcode" style="width:160px;height:160px"></div>
             <small class="muted">Escanéalo para abrir la pestaña de asistencia.</small>
             <div style="margin-top:8px;text-align:center">
-              <a href="https://asistencia14.vercel.app/?go=asistencia" target="_blank" class="primary" style="text-decoration:none;color:#22d3ee;font-weight:bold">🔗 Abrir Asistencia</a>
+              <a href="https://asistencia-rho.vercel.app/?go=asistencia" target="_blank" class="primary" style="text-decoration:none;color:#22d3ee;font-weight:bold">🔗 Abrir Asistencia</a>
             </div>
           </div>
         </div>
@@ -190,7 +190,7 @@
     try {
       const qrEl = document.getElementById("qrcode");
       if (qrEl && window.QRCode) {
-        const qrUrl = "https://asistencia.vercel.app/?go=asistencia";
+        const qrUrl = "https://asistencia-rho.vercel.app/?go=asistencia";
         console.log("Generando QR con:", qrUrl);
         new QRCode(qrEl, { text: qrUrl, width: 160, height: 160 });
       }
