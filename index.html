@@ -190,7 +190,7 @@
     try {
       const qrEl = document.getElementById("qrcode");
       if (qrEl && window.QRCode) {
-        const qrUrl = "https://asistencia14.vercel.app/?go=asistencia";
+        const qrUrl = "https://asistencia.vercel.app/?go=asistencia";
         console.log("Generando QR con:", qrUrl);
         new QRCode(qrEl, { text: qrUrl, width: 160, height: 160 });
       }
